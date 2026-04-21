@@ -1,4 +1,5 @@
-import { getAllRecords, projectRecordPoint } from "../../lib/records";
+import LiveRecordsMap from "../../components/LiveRecordsMap";
+import { getAllRecords } from "../../lib/records";
 
 export default function MapPage() {
   const records = getAllRecords();
@@ -8,7 +9,7 @@ export default function MapPage() {
       <div className="container">
         <h1 style={{ fontFamily: "var(--font-heading)", fontSize: "2.4rem", margin: "0 0 16px" }}>Map view</h1>
         <p style={{ color: "var(--text-muted)", margin: "0 0 24px" }}>
-          A lightweight first-pass map that places each record inside the archive bounds. This is the discovery view.
+          A live basemap view for discovery, with the current archive records placed on top of OpenStreetMap tiles.
         </p>
         <div className="map-layout">
           <aside className="map-panel">
@@ -33,21 +34,7 @@ export default function MapPage() {
             </div>
           </aside>
           <section>
-            <div className="map-canvas" aria-label="Record map">
-              {records.map((record) => {
-                const point = projectRecordPoint(record);
-                const pointClass = `map-point map-point--${record.urgency} ${record.stillAccessible === false ? "map-point--lost" : ""}`;
-                return (
-                  <a
-                    key={record.id}
-                    href={`/record/${record.slug}`}
-                    className={pointClass}
-                    style={{ left: `${point.left}%`, top: `${point.top}%` }}
-                    title={record.title}
-                  />
-                );
-              })}
-            </div>
+            <LiveRecordsMap records={records} />
             <div className="map-legend">
               <span><span className="badge badge--critical">critical / high</span></span>
               <span><span className="badge badge--medium">medium</span></span>
