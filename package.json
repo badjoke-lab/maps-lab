@@ -1,0 +1,14 @@
+{
+  "name": "maps-lab",
+  "private": true,
+  "packageManager": "pnpm@10.0.0",
+  "scripts": {
+    "dev:last-chances": "pnpm --filter last-chances-map dev",
+    "build:last-chances": "pnpm --filter last-chances-map build",
+    "seed:build:last-chances": "tsx scripts/seed/build-last-chances-records.ts"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.4.5"
+  }
+}
