@@ -1,5 +1,19 @@
-import LiveRecordsMap from "../../components/LiveRecordsMap";
+import dynamic from "next/dynamic";
 import { getAllRecords } from "../../lib/records";
+
+const LiveRecordsMap = dynamic(() => import("../../components/LiveRecordsMap"), {
+  ssr: false,
+  loading: () => (
+    <div
+      style={{
+        height: 640,
+        width: "100%",
+        border: "1px solid var(--border)",
+        background: "linear-gradient(180deg, #efe6d8 0%, #f8f2e8 100%)",
+      }}
+    />
+  ),
+});
 
 export default function MapPage() {
   const records = getAllRecords();
