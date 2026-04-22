@@ -5,6 +5,8 @@
   "scripts": {
     "dev:last-chances": "pnpm --filter last-chances-map dev",
     "build:last-chances": "pnpm --filter last-chances-map build",
+    "preview:last-chances": "pnpm --filter last-chances-map preview",
+    "deploy:last-chances": "pnpm --filter last-chances-map deploy",
     "seed:build:last-chances": "tsx scripts/seed/build-last-chances-records.ts"
   },
   "devDependencies": {
