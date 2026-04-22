@@ -5,17 +5,22 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
   },
   "dependencies": {
     "@maps-lab/core-schema": "workspace:*",
     "leaflet": "^1.9.4",
-    "next": "15.3.0",
+    "next": "15.3.8",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-leaflet": "^5.0.0"
   },
   "devDependencies": {
-    "@types/leaflet": "^1.9.20"
+    "@opennextjs/cloudflare": "latest",
+    "@types/leaflet": "^1.9.20",
+    "wrangler": "latest"
   }
 }
