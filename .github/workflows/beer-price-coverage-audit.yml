@@ -1,0 +1,41 @@
+name: Beer price coverage audit
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download pinned joined price snapshot
+        run: |
+          curl -fL --retry 4 --retry-delay 5 \
+            -o retail-product-prices.csv \
+            https://github.com/webtruffle/retail-product-catalog-prices/releases/download/2026-09-01/retail-product-prices.csv
+          echo "a8f3be9bc3c9a8a309dce447acf42292f416a6d73af332796b41e85444032a47  retail-product-prices.csv" | sha256sum -c -
+          ls -lh retail-product-prices.csv
+
+      - name: Audit all beer observations
+        run: |
+          python3 scripts/audit/beer-price-coverage.py \
+            retail-product-prices.csv \
+            audit-output \
+            --edition-date 2026-09-01
+
+      - name: Print summary
+        run: cat audit-output/summary.json
+
+      - name: Upload exact audit outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: beer-price-coverage-audit
+          path: audit-output/
+          retention-days: 30
