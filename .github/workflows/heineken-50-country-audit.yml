@@ -1,0 +1,35 @@
+name: Heineken 50-country acquisition audit
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/audit/heineken-50-country.py'
+      - '.github/workflows/heineken-50-country-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SERPAPI_API_KEY: ${{ secrets.SERPAPI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run 50-country acquisition audit
+        run: python3 scripts/audit/heineken-50-country.py audit-output
+      - name: Print compact summary
+        run: python3 - <<'PY'
+          import json
+          x=json.load(open('audit-output/summary.json'))
+          x.pop('rows',None)
+          print(json.dumps(x,indent=2,ensure_ascii=False))
+          PY
+      - name: Upload audit outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: heineken-50-country-audit
+          path: audit-output/
+          retention-days: 30
