@@ -5,7 +5,7 @@ OUT=os.environ.get('CANONICAL_OUT','corona-canonical-audit.json')
 d=json.load(open(IN,encoding='utf-8'))
 
 CURRENCY={
-'AE':'AED','AT':'EUR','AU':'AUD','BA':'BAM','BR':'BRL','CA':'CAD','CL':'CLP','CR':'CRC','CZ':'CZK','DK':'DKK','DO':'DOP','EC':'USD','EE':'EUR','FI':'EUR','FR':'EUR','GE':'GEL','GR':'EUR','HR':'EUR','ID':'IDR','IE':'EUR','IL':'ILS','IS':'ISK','IT':'EUR','JM':'USD','JO':'JOD','JP':'JPY','KE':'KES','KZ':'KZT','LB':'USD','LK':'LKR','LV':'EUR','MD':'MDL','MU':'MUR','MY':'MYR','NI':'NIO','NL':'EUR','NP':'USD','PA':'USD','PE':'PEN','PL':'PLN','PT':'EUR','PY':'PYG','RS':'RSD','RW':'RWF','SE':'SEK','SG':'SGD','SI':'EUR','TH':'THB','TW':'TWD','UG':'UGX','VN':'VND'}
+'AE':'AED','AM':'AMD','AT':'EUR','AU':'AUD','BA':'BAM','BE':'EUR','BG':'BGN','BH':'BHD','BR':'BRL','CA':'CAD','CH':'CHF','CL':'CLP','CO':'COP','CR':'CRC','CY':'EUR','CZ':'CZK','DE':'EUR','DK':'DKK','DO':'DOP','EC':'USD','EE':'EUR','ES':'EUR','FI':'EUR','FR':'EUR','GB':'GBP','GE':'GEL','GH':'GHS','GR':'EUR','GT':'GTQ','HK':'HKD','HR':'EUR','HU':'HUF','ID':'IDR','IE':'EUR','IL':'ILS','IS':'ISK','IT':'EUR','JM':'USD','JO':'JOD','JP':'JPY','KE':'KES','KR':'KRW','KZ':'KZT','LB':'USD','LK':'LKR','LU':'EUR','LV':'EUR','MD':'MDL','MT':'EUR','MU':'MUR','MX':'MXN','MY':'MYR','NI':'NIO','NL':'EUR','NO':'NOK','NP':'USD','NZ':'NZD','PA':'USD','PE':'PEN','PH':'PHP','PL':'PLN','PT':'EUR','PY':'PYG','RO':'RON','RS':'RSD','RW':'RWF','SE':'SEK','SG':'SGD','SI':'EUR','SK':'EUR','TH':'THB','TT':'TTD','TW':'TWD','UG':'UGX','US':'USD','UY':'UYU','VN':'VND','ZA':'ZAR','ZM':'ZMW'}
 PREFERRED={'MD':'winetime.md','NP':'cheers.com.np','UG':'legourmetkampala.com','TH':'wishbeer.com'}
 
 def num(s):
