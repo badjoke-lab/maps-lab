@@ -27,26 +27,36 @@ jobs:
           npm install --no-save playwright@1.55.0
           npx playwright install --with-deps chromium
 
-      - name: Fix v2 regex typo
+      - name: Prepare expanded probe
         run: |
           python - <<'PY'
           from pathlib import Path
           p = Path('scripts/probe-corona-auto-v2.mjs')
           s = p.read_text()
-          old = r')\b?/i;'
-          new = r')/i;'
-          if old not in s:
+          typo = r')\b?/i;'
+          if typo not in s:
               raise SystemExit('expected regex typo not found')
-          p.write_text(s.replace(old, new, 1))
+          s = s.replace(typo, r')/i;', 1)
+          base = "const sources = JSON.parse(await fs.readFile('data/probes/corona-auto-sources.json', 'utf8'));"
+          expanded = "const sources = [...JSON.parse(await fs.readFile('data/probes/corona-auto-sources.json', 'utf8')), ...JSON.parse(await fs.readFile('data/probes/corona-auto-sources-alt.json', 'utf8'))];"
+          if base not in s:
+              raise SystemExit('source loader not found')
+          s = s.replace(base, expanded, 1)
+          old_currency_tail = r'|€|\$)'
+          new_currency_tail = r'|LKR|NPR|KShs?|GH₵|MDL|₸|Rp|դր\.?|₨|RWF|USh|UGX|ZMW|BHD|€|\$)'
+          if s.count(old_currency_tail) < 2:
+              raise SystemExit('currency regex tails not found')
+          s = s.replace(old_currency_tail, new_currency_tail)
+          p.write_text(s)
           PY
           node --check scripts/probe-corona-auto-v2.mjs
 
-      - name: Probe 60 country sources
+      - name: Probe all candidate country sources
         id: probe
         continue-on-error: true
         env:
           PROBE_TIMEOUT_MS: '20000'
-          PROBE_CONCURRENCY: '6'
+          PROBE_CONCURRENCY: '8'
         run: node scripts/probe-corona-auto-v2.mjs
 
       - name: Upload probe result
