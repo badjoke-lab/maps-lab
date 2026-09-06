@@ -1,0 +1,49 @@
+name: Corona auto source probe
+
+on:
+  push:
+    branches:
+      - probe/corona-50-auto
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Probe 60 country sources
+        id: probe
+        continue-on-error: true
+        env:
+          PW_FALLBACK: '1'
+          PROBE_TIMEOUT_MS: '20000'
+        run: node scripts/probe-corona-auto.mjs
+
+      - name: Upload probe result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: corona-auto-probe-results
+          path: corona-auto-probe-results.json
+          if-no-files-found: error
+
+      - name: Enforce 50-country threshold
+        if: always()
+        run: |
+          node -e "const r=require('./corona-auto-probe-results.json'); console.log('PASS',r.passed,'/',r.total); if(!r.thresholdMet) process.exit(2)"
