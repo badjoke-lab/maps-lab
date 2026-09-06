@@ -70,23 +70,7 @@ jobs:
 
       - name: Canonicalize price tuples
         if: always()
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          p=Path('scripts/audit-corona-strict.py')
-          s=p.read_text()
-          replacements={
-            "'AT':'EUR','AU':'AUD','BA':'BAM'":"'AT':'EUR','AU':'AUD','BE':'EUR','BA':'BAM'",
-            "'NI':'NIO','NL':'EUR','NP':'USD'":"'NI':'NIO','NL':'EUR','NZ':'NZD','NP':'USD'",
-            "'UG':'UGX','VN':'VND'}":"'UG':'UGX','VN':'VND','ZA':'ZAR'}",
-          }
-          for old,new in replacements.items():
-              if old not in s:
-                  raise SystemExit(f'currency map anchor not found: {old}')
-              s=s.replace(old,new,1)
-          p.write_text(s)
-          PY
-          python scripts/audit-corona-strict.py
+        run: python scripts/audit-corona-strict.py
 
       - name: Upload strict and canonical results
         if: always()
