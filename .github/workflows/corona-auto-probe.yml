@@ -28,7 +28,9 @@ jobs:
           npx playwright install --with-deps chromium
 
       - name: Syntax check
-        run: node --check scripts/probe-corona-strict.mjs
+        run: |
+          node --check scripts/probe-corona-strict.mjs
+          python -m py_compile scripts/audit-corona-strict.py
 
       - name: Strict probe all candidate sources
         id: probe
@@ -39,15 +41,21 @@ jobs:
           PROBE_MAX_DISTANCE: '2200'
         run: node scripts/probe-corona-strict.mjs
 
-      - name: Upload strict result
+      - name: Canonicalize price tuples
+        if: always()
+        run: python scripts/audit-corona-strict.py
+
+      - name: Upload strict and canonical results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: corona-strict-probe-results
-          path: corona-strict-probe-results.json
+          name: corona-canonical-probe-results
+          path: |
+            corona-strict-probe-results.json
+            corona-canonical-audit.json
           if-no-files-found: error
 
-      - name: Enforce strict 50-country threshold
+      - name: Enforce canonical 50-country threshold
         if: always()
         run: |
-          node -e "const r=require('./corona-strict-probe-results.json'); console.log('STRICT PASS',r.passedCountries,'/',r.totalCountries); if(!r.thresholdMet) process.exit(2)"
+          node -e "const r=require('./corona-canonical-audit.json'); console.log('CANONICAL PASS',r.canonicalPassedCountries,'/',79); if(!r.thresholdMet) process.exit(2)"
