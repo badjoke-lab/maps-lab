@@ -30,20 +30,58 @@ jobs:
       - name: Syntax check
         run: |
           node --check scripts/probe-corona-strict.mjs
-          python -m py_compile scripts/audit-corona-strict.py
+          python -m py_compile scripts/audit-corona-strict.py scripts/merge-corona-strict.py
 
-      - name: Strict probe all candidate sources
-        id: probe
+      - name: Strict probe attempt 1
         continue-on-error: true
         env:
           PROBE_TIMEOUT_MS: '20000'
           PROBE_CONCURRENCY: '8'
           PROBE_MAX_DISTANCE: '2200'
-        run: node scripts/probe-corona-strict.mjs
+        run: |
+          node scripts/probe-corona-strict.mjs
+          mv corona-strict-probe-results.json corona-strict-probe-results-1.json
+
+      - name: Preserve attempt 1 after threshold failure
+        if: always()
+        run: |
+          if [ -f corona-strict-probe-results.json ]; then mv corona-strict-probe-results.json corona-strict-probe-results-1.json; fi
+          test -f corona-strict-probe-results-1.json
+
+      - name: Strict probe attempt 2
+        continue-on-error: true
+        env:
+          PROBE_TIMEOUT_MS: '20000'
+          PROBE_CONCURRENCY: '6'
+          PROBE_MAX_DISTANCE: '2200'
+        run: |
+          node scripts/probe-corona-strict.mjs
+          mv corona-strict-probe-results.json corona-strict-probe-results-2.json
+
+      - name: Preserve attempt 2 after threshold failure
+        if: always()
+        run: |
+          if [ -f corona-strict-probe-results.json ]; then mv corona-strict-probe-results.json corona-strict-probe-results-2.json; fi
+          test -f corona-strict-probe-results-2.json
+
+      - name: Merge strict attempts
+        if: always()
+        run: python scripts/merge-corona-strict.py corona-strict-probe-results-1.json corona-strict-probe-results-2.json
 
       - name: Canonicalize price tuples
         if: always()
-        run: python scripts/audit-corona-strict.py
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/audit-corona-strict.py')
+          s=p.read_text()
+          old="'AT':'EUR','AU':'AUD','BA':'BAM'"
+          new="'AT':'EUR','AU':'AUD','BE':'EUR','BA':'BAM'"
+          if old not in s:
+              raise SystemExit('currency map anchor not found')
+          p.write_text(s.replace(old,new,1))
+          PY
+          python scripts/audit-corona-strict.py
 
       - name: Upload strict and canonical results
         if: always()
@@ -51,6 +89,8 @@ jobs:
         with:
           name: corona-canonical-probe-results
           path: |
+            corona-strict-probe-results-1.json
+            corona-strict-probe-results-2.json
             corona-strict-probe-results.json
             corona-canonical-audit.json
           if-no-files-found: error
