@@ -3,6 +3,7 @@
   {"code":"IE","country":"Ireland","url":"https://www.carryout.ie/p/corona-extra-lager-18-x-330ml-bottles/7501064196539"},
   {"code":"NL","country":"Netherlands","url":"https://www.jumbo.com/producten/corona-extra-bier-blikken-6-x-33-cl-538459PAK"},
   {"code":"BE","country":"Belgium","url":"https://www.ah.be/producten/product/wi185324/corona-extra-pils"},
+  {"code":"BE","country":"Belgium","url":"https://www.carrefour.be/nl/extra-12x33cl-fles/06955917.html"},
   {"code":"SG","country":"Singapore","url":"https://www.paneco.com.sg/products/corona-extra-beer-bottle-330ml-4987"},
   {"code":"TH","country":"Thailand","url":"https://wishbeer.com/products/corona-extra-350-ml-46"},
   {"code":"TH","country":"Thailand","url":"https://www.makro.pro/en/p/895548-701295338804336"},
@@ -29,5 +30,7 @@
   {"code":"UG","country":"Uganda","url":"https://cecelinewines.com/shop/ce00500-corona-extra-beer-330ml-24392"},
   {"code":"ZM","country":"Zambia","url":"https://lusakadelivery.com/products/corona-extra-beer"},
   {"code":"BH","country":"Bahrain","url":"https://www.ubuy.com.bh/en/productuk/167JZS2ZY-corona-extra-mexican-lager"},
-  {"code":"UY","country":"Uruguay","url":"https://www.mercadolibre.com.uy/cerveza-corona-extra-retornable-330-ml/up/MLUU2442539881"}
+  {"code":"UY","country":"Uruguay","url":"https://www.mercadolibre.com.uy/cerveza-corona-extra-retornable-330-ml/up/MLUU2442539881"},
+  {"code":"NZ","country":"New Zealand","url":"https://www.newworld.co.nz/shop/product/5006965_ea_000nw?name=corona-extra-bottles"},
+  {"code":"ZA","country":"South Africa","url":"https://www.pricecheck.co.za/offers/235934989/Corona%2BExtra%2BBeer%2BBottle%2B355ML"}
 ]
