@@ -12,7 +12,7 @@ permissions:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -31,9 +31,9 @@ jobs:
         id: probe
         continue-on-error: true
         env:
-          PW_FALLBACK: '1'
           PROBE_TIMEOUT_MS: '20000'
-        run: node scripts/probe-corona-auto.mjs
+          PROBE_CONCURRENCY: '6'
+        run: node scripts/probe-corona-auto-v2.mjs
 
       - name: Upload probe result
         if: always()
@@ -46,4 +46,4 @@ jobs:
       - name: Enforce 50-country threshold
         if: always()
         run: |
-          node -e "const r=require('./corona-auto-probe-results.json'); console.log('PASS',r.passed,'/',r.total); if(!r.thresholdMet) process.exit(2)"
+          node -e "const r=require('./corona-auto-probe-results.json'); console.log('PASS',r.passedCountries,'/',r.totalCountries); if(!r.thresholdMet) process.exit(2)"
