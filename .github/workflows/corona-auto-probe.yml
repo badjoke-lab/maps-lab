@@ -75,11 +75,16 @@ jobs:
           from pathlib import Path
           p=Path('scripts/audit-corona-strict.py')
           s=p.read_text()
-          old="'AT':'EUR','AU':'AUD','BA':'BAM'"
-          new="'AT':'EUR','AU':'AUD','BE':'EUR','BA':'BAM'"
-          if old not in s:
-              raise SystemExit('currency map anchor not found')
-          p.write_text(s.replace(old,new,1))
+          replacements={
+            "'AT':'EUR','AU':'AUD','BA':'BAM'":"'AT':'EUR','AU':'AUD','BE':'EUR','BA':'BAM'",
+            "'NI':'NIO','NL':'EUR','NP':'USD'":"'NI':'NIO','NL':'EUR','NZ':'NZD','NP':'USD'",
+            "'UG':'UGX','VN':'VND'}":"'UG':'UGX','VN':'VND','ZA':'ZAR'}",
+          }
+          for old,new in replacements.items():
+              if old not in s:
+                  raise SystemExit(f'currency map anchor not found: {old}')
+              s=s.replace(old,new,1)
+          p.write_text(s)
           PY
           python scripts/audit-corona-strict.py
 
