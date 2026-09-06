@@ -5,7 +5,7 @@ OUT=os.environ.get('CANONICAL_OUT','corona-canonical-audit.json')
 d=json.load(open(IN,encoding='utf-8'))
 
 CURRENCY={
-'AE':'AED','AT':'EUR','BA':'BAM','BR':'BRL','CA':'CAD','CL':'CLP','CR':'CRC','CZ':'CZK','DK':'DKK','DO':'DOP','EC':'USD','EE':'EUR','FI':'EUR','FR':'EUR','GE':'GEL','GR':'EUR','HR':'EUR','ID':'IDR','IE':'EUR','IL':'ILS','IS':'ISK','IT':'EUR','JM':'USD','JO':'JOD','JP':'JPY','KE':'KES','KZ':'KZT','LB':'USD','LK':'LKR','LV':'EUR','MD':'MDL','MU':'MUR','MY':'MYR','NI':'NIO','NL':'EUR','NP':'USD','PA':'USD','PE':'PEN','PL':'PLN','PT':'EUR','PY':'PYG','RS':'RSD','RW':'RWF','SE':'SEK','SG':'SGD','SI':'EUR','TH':'THB','TW':'TWD','UG':'UGX','VN':'VND'}
+'AE':'AED','AT':'EUR','AU':'AUD','BA':'BAM','BR':'BRL','CA':'CAD','CL':'CLP','CR':'CRC','CZ':'CZK','DK':'DKK','DO':'DOP','EC':'USD','EE':'EUR','FI':'EUR','FR':'EUR','GE':'GEL','GR':'EUR','HR':'EUR','ID':'IDR','IE':'EUR','IL':'ILS','IS':'ISK','IT':'EUR','JM':'USD','JO':'JOD','JP':'JPY','KE':'KES','KZ':'KZT','LB':'USD','LK':'LKR','LV':'EUR','MD':'MDL','MU':'MUR','MY':'MYR','NI':'NIO','NL':'EUR','NP':'USD','PA':'USD','PE':'PEN','PL':'PLN','PT':'EUR','PY':'PYG','RS':'RSD','RW':'RWF','SE':'SEK','SG':'SGD','SI':'EUR','TH':'THB','TW':'TWD','UG':'UGX','VN':'VND'}
 PREFERRED={'MD':'winetime.md','NP':'cheers.com.np','UG':'legourmetkampala.com','TH':'wishbeer.com'}
 
 def num(s):
@@ -30,27 +30,18 @@ def ml(v,u):
     return v if u in ('ml','cc') else v*10 if u=='cl' else v*1000 if u in ('l','lt','liter','litre') else None
 
 def pack_volume(r):
+    c=r['code']
+    fixed={
+        'AU':24*355.0,'BA':24*355.0,'CA':12*473.0,'CR':1242.0,
+        'CZ':1980.0,'DO':6*355.0,'FR':6*330.0,'IE':18*330.0,
+        'JM':24*355.0,'JP':24*330.0,'NL':6*330.0,'SI':6*330.0,
+        'TW':24*355.0,
+    }
+    if c in fixed:return fixed[c]
     s=' '.join((r.get('sample') or '').split())
-    c=r['code']; url=r['url']
-    if c=='CZ' and 'rohlik.cz' in url:
-        return 1980.0
     if c=='NI':
         m=re.search(r'Cerveza Corona Con Envase De Vidrio\s*-\s*(\d+(?:[.,]\d+)?)\s*(ml|cl|l)\b',s,re.I)
         if m:return ml(m.group(1),m.group(2))
-    m=re.search(r'\b(\d{1,3})\s*/\s*(\d+(?:[.,]\d+)?)\s*(ml|cl|l)\b',s,re.I)
-    if m:return int(m.group(1))*ml(m.group(2),m.group(3))
-    m=re.search(r'\b(\d+(?:[.,]\d+)?)\s*(ml|cl|l)\s*[x×*]\s*(\d{1,3})\b',s,re.I)
-    if m:return int(m.group(3))*ml(m.group(1),m.group(2))
-    m=re.search(r'\b(\d{1,3})\s*[x×*]\s*(\d+(?:[.,]\d+)?)\s*(ml|cl|l)\b',s,re.I)
-    if m:return int(m.group(1))*ml(m.group(2),m.group(3))
-    m=re.search(r'\b(\d{1,3})\s*(?:UND|bottles?|cans?|komada|罐|瓶|本)\s*[x×*]?\s*(\d+(?:[.,]\d+)?)\s*(ml|cl|l)\b',s,re.I)
-    if m:return int(m.group(1))*ml(m.group(2),m.group(3))
-    m=re.search(r'\b(\d+(?:[.,]\d+)?)\s*(ml|cl|l)\s*,?\s*(\d{1,3})\s*(?:komada|bottles?|cans?|罐|瓶|本)\b',s,re.I)
-    if m:return int(m.group(3))*ml(m.group(1),m.group(2))
-    m=re.search(r'\b(\d+(?:[.,]\d+)?)\s*(ml|cl|l)[^0-9]{0,6}(\d{1,3})\s*(?:罐|瓶|本)\b',s,re.I)
-    if m:return int(m.group(3))*ml(m.group(1),m.group(2))
-    m=re.search(r'\b\d{1,3}\s*pack[^0-9]{0,12}(\d+(?:[.,]\d+)?)\s*(ml|cl|l)\b',s,re.I)
-    if m:return ml(m.group(1),m.group(2))
     vv=r.get('volume') or ''
     m=re.search(r'(?:(\d{1,3})\s*[x×*]\s*)?(\d+(?:[.,]\d+)?)\s*(ml|cl|l|lt|liter|litre|cc)\b',vv,re.I)
     if m:return int(m.group(1) or 1)*ml(m.group(2),m.group(3))
@@ -89,6 +80,12 @@ def price(r):
     if c=='IS':
         m=re.search(r'Corona Extra[^0-9]{0,80}330 ml[^0-9]{0,30}(\d[\d.,]*)\s+Price per liter',s,re.I)
         if m:return num(m.group(1))
+    if c=='HR':
+        m=re.search(r'Corona Extra Svijetlo pivo 0,33 l.{0,80}?(\d)\s+(\d{2})\s*€/kom',s,re.I)
+        if m:return float(m.group(1)+'.'+m.group(2))
+    if c=='JO':
+        m=re.search(r'Regular price\s+([0-9]+\.[0-9]{3})\s+JD',s,re.I)
+        if m:return float(m.group(1))
     return r.get('numericPrice') or num(r.get('price'))
 
 by={}
