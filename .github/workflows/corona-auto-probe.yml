@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 jobs:
-  probe:
+  strict-probe:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -27,47 +27,27 @@ jobs:
           npm install --no-save playwright@1.55.0
           npx playwright install --with-deps chromium
 
-      - name: Prepare expanded probe
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          p = Path('scripts/probe-corona-auto-v2.mjs')
-          s = p.read_text()
-          typo = r')\b?/i;'
-          if typo not in s:
-              raise SystemExit('expected regex typo not found')
-          s = s.replace(typo, r')/i;', 1)
-          base = "const sources = JSON.parse(await fs.readFile('data/probes/corona-auto-sources.json', 'utf8'));"
-          expanded = "const sources = [...JSON.parse(await fs.readFile('data/probes/corona-auto-sources.json', 'utf8')), ...JSON.parse(await fs.readFile('data/probes/corona-auto-sources-alt.json', 'utf8'))];"
-          if base not in s:
-              raise SystemExit('source loader not found')
-          s = s.replace(base, expanded, 1)
-          old_currency_tail = r'|€|\$)'
-          new_currency_tail = r'|LKR|NPR|KShs?|GH₵|MDL|₸|Rp|դր\.?|₨|RWF|USh|UGX|ZMW|BHD|€|\$)'
-          if s.count(old_currency_tail) < 2:
-              raise SystemExit('currency regex tails not found')
-          s = s.replace(old_currency_tail, new_currency_tail)
-          p.write_text(s)
-          PY
-          node --check scripts/probe-corona-auto-v2.mjs
+      - name: Syntax check
+        run: node --check scripts/probe-corona-strict.mjs
 
-      - name: Probe all candidate country sources
+      - name: Strict probe all candidate sources
         id: probe
         continue-on-error: true
         env:
           PROBE_TIMEOUT_MS: '20000'
           PROBE_CONCURRENCY: '8'
-        run: node scripts/probe-corona-auto-v2.mjs
+          PROBE_MAX_DISTANCE: '2200'
+        run: node scripts/probe-corona-strict.mjs
 
-      - name: Upload probe result
+      - name: Upload strict result
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: corona-auto-probe-results
-          path: corona-auto-probe-results.json
+          name: corona-strict-probe-results
+          path: corona-strict-probe-results.json
           if-no-files-found: error
 
-      - name: Enforce 50-country threshold
+      - name: Enforce strict 50-country threshold
         if: always()
         run: |
-          node -e "const r=require('./corona-auto-probe-results.json'); console.log('PASS',r.passedCountries,'/',r.totalCountries); if(!r.thresholdMet) process.exit(2)"
+          node -e "const r=require('./corona-strict-probe-results.json'); console.log('STRICT PASS',r.passedCountries,'/',r.totalCountries); if(!r.thresholdMet) process.exit(2)"
