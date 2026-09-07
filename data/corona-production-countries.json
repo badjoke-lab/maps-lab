@@ -1,0 +1,19 @@
+{
+  "product": "Corona Extra",
+  "minimumFreshCountries": 50,
+  "core": [
+    "AE","AT","AU","BA","BE","BR","CA","CH","CL","CR",
+    "CZ","DK","DO","EC","EE","FI","FR","GE","GR","HR",
+    "ID","IE","IL","IS","IT","JM","JO","JP","KZ","LB",
+    "LK","LV","MD","MT","MU","MY","NL","NP","NZ","PA",
+    "PE","PH","PL","PT","PY","SE","SG","TH","TW","VN"
+  ],
+  "spare": ["NI","KE","RW","SI","UG"],
+  "spareNotes": {
+    "NI": "Observed product page and parsed volume disagree; keep out of core until source is corrected.",
+    "KE": "Current source is a generic retailer landing page; replace with a stable product URL before core promotion.",
+    "RW": "Current source is a generic store surface; replace with a stable product URL before core promotion.",
+    "SI": "Current parser uses a fixed pack-volume assumption that does not match the source slug cleanly; keep as spare.",
+    "UG": "Current source is a generic collection surface; replace with a stable product URL before core promotion."
+  }
+}
