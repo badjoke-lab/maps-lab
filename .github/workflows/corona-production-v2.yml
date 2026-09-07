@@ -1,0 +1,126 @@
+name: Corona production v2
+
+on:
+  push:
+    branches:
+      - build/corona-production
+      - main
+    paths-ignore:
+      - 'data/corona/**'
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  collect-build:
+    if: github.actor != 'github-actions[bot]' || github.event_name != 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Syntax check
+        run: |
+          node --check scripts/probe-corona-strict.mjs
+          node --check scripts/fetch-corona-fx.mjs
+          node --check scripts/build-corona-site.mjs
+          node --check apps/corona-price-map/app-v2.js
+          python -m py_compile scripts/audit-corona-strict.py scripts/merge-corona-strict.py scripts/publish-corona-production.py scripts/build-corona-history-summary.py
+
+      - name: Probe attempt 1
+        continue-on-error: true
+        env:
+          PROBE_TIMEOUT_MS: '20000'
+          PROBE_CONCURRENCY: '8'
+          PROBE_MAX_DISTANCE: '2200'
+        run: |
+          node scripts/probe-corona-strict.mjs
+          mv corona-strict-probe-results.json corona-strict-probe-results-1.json
+
+      - name: Preserve attempt 1
+        if: always()
+        run: |
+          if [ -f corona-strict-probe-results.json ]; then mv corona-strict-probe-results.json corona-strict-probe-results-1.json; fi
+          test -f corona-strict-probe-results-1.json
+
+      - name: Probe attempt 2
+        continue-on-error: true
+        env:
+          PROBE_TIMEOUT_MS: '20000'
+          PROBE_CONCURRENCY: '6'
+          PROBE_MAX_DISTANCE: '2200'
+        run: |
+          node scripts/probe-corona-strict.mjs
+          mv corona-strict-probe-results.json corona-strict-probe-results-2.json
+
+      - name: Preserve attempt 2
+        if: always()
+        run: |
+          if [ -f corona-strict-probe-results.json ]; then mv corona-strict-probe-results.json corona-strict-probe-results-2.json; fi
+          test -f corona-strict-probe-results-2.json
+
+      - name: Merge attempts
+        run: python scripts/merge-corona-strict.py corona-strict-probe-results-1.json corona-strict-probe-results-2.json
+
+      - name: Canonicalize price tuples
+        run: python scripts/audit-corona-strict.py
+
+      - name: Build production snapshot
+        run: python scripts/publish-corona-production.py
+
+      - name: Fetch free FX rates
+        run: node scripts/fetch-corona-fx.mjs
+
+      - name: Build price history summary
+        run: python scripts/build-corona-history-summary.py
+
+      - name: Build static site
+        run: node scripts/build-corona-site.mjs
+
+      - name: Upload production evidence and site
+        uses: actions/upload-artifact@v4
+        with:
+          name: corona-production-v2
+          path: |
+            corona-canonical-audit.json
+            data/corona/current.json
+            data/corona/fx.json
+            data/corona/history-summary.json
+            data/corona/source-health.json
+            data/corona/history/*.json
+            dist/corona-price-map/**
+          if-no-files-found: error
+
+      - name: Persist production data
+        if: github.event_name != 'pull_request'
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch origin "${GITHUB_REF_NAME}"
+          if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/${GITHUB_REF_NAME})" ]; then
+            echo 'branch advanced during collection; refusing to overwrite newer state'
+            exit 3
+          fi
+          git add data/corona
+          if git diff --cached --quiet; then
+            echo 'no production data changes'
+            exit 0
+          fi
+          git commit -m 'data: refresh Corona production dataset'
+          git push origin "HEAD:${GITHUB_REF_NAME}"
