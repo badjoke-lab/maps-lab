@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="Daily Corona Extra prices across countries, normalized to 330 ml with source and history." />
+  <title>Corona Extra Price Map</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div>
+      <p class="eyebrow">Global beer price tracker</p>
+      <h1>Corona Extra Price Map</h1>
+      <p class="lede">Daily shelf prices from selected public retailers, normalized to 330 ml for cross-country comparison.</p>
+    </div>
+    <div class="controls">
+      <label>Display currency
+        <select id="currency"><option>USD</option><option>JPY</option><option>EUR</option><option>GBP</option></select>
+      </label>
+      <span id="updated" class="updated">Loading…</span>
+    </div>
+  </header>
+  <main>
+    <section class="summary-grid" aria-label="Summary">
+      <article><span class="kicker">Fresh countries</span><strong id="fresh-count">—</strong></article>
+      <article><span class="kicker">Cheapest</span><strong id="cheapest">—</strong></article>
+      <article><span class="kicker">Most expensive</span><strong id="expensive">—</strong></article>
+      <article><span class="kicker">Production gate</span><strong id="gate">—</strong></article>
+    </section>
+    <section class="map-panel">
+      <div class="panel-head"><div><h2>330 ml equivalent</h2><p>Country colors use the same normalized product quantity.</p></div><div id="legend" class="legend"></div></div>
+      <div id="map" class="map" role="img" aria-label="World choropleth map of Corona Extra prices"></div>
+      <div id="tooltip" class="tooltip" hidden></div>
+    </section>
+    <section class="grid-two">
+      <article class="panel"><h2>Country ranking</h2><div class="table-wrap"><table><thead><tr><th>#</th><th>Country</th><th>330 ml</th><th>Source</th></tr></thead><tbody id="ranking"></tbody></table></div></article>
+      <article class="panel country-panel"><h2 id="country-title">Select a country</h2><div id="country-detail" class="country-detail"><p>Tap or click a colored country to inspect the exact package, source and freshness.</p></div><div id="history-chart" style="margin-top:20px"></div></article>
+    </section>
+  </main>
+  <footer><p>Reference prices are selected source prices, not national averages. Original package, local shelf price, source URL and observation time are retained.</p></footer>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+  <script src="./app.js" type="module"></script>
+</body>
+</html>
