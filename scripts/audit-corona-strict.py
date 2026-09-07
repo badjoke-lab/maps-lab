@@ -6,7 +6,7 @@ d=json.load(open(IN,encoding='utf-8'))
 
 CURRENCY={
 'AE':'AED','AM':'AMD','AT':'EUR','AU':'AUD','BA':'BAM','BE':'EUR','BG':'BGN','BH':'BHD','BR':'BRL','CA':'CAD','CH':'CHF','CL':'CLP','CO':'COP','CR':'CRC','CY':'EUR','CZ':'CZK','DE':'EUR','DK':'DKK','DO':'DOP','EC':'USD','EE':'EUR','ES':'EUR','FI':'EUR','FR':'EUR','GB':'GBP','GE':'GEL','GH':'GHS','GR':'EUR','GT':'GTQ','HK':'HKD','HR':'EUR','HU':'HUF','ID':'IDR','IE':'EUR','IL':'ILS','IS':'ISK','IT':'EUR','JM':'USD','JO':'JOD','JP':'JPY','KE':'KES','KR':'KRW','KZ':'KZT','LB':'USD','LK':'LKR','LU':'EUR','LV':'EUR','MD':'MDL','MT':'EUR','MU':'MUR','MX':'MXN','MY':'MYR','NI':'NIO','NL':'EUR','NO':'NOK','NP':'USD','NZ':'NZD','PA':'USD','PE':'PEN','PH':'PHP','PL':'PLN','PT':'EUR','PY':'PYG','RO':'RON','RS':'RSD','RW':'RWF','SE':'SEK','SG':'SGD','SI':'EUR','SK':'EUR','TH':'THB','TT':'TTD','TW':'TWD','UG':'UGX','US':'USD','UY':'UYU','VN':'VND','ZA':'ZAR','ZM':'ZMW'}
-PREFERRED={'MD':'winetime.md','NP':'cheers.com.np','UG':'legourmetkampala.com','TH':'wishbeer.com'}
+PREFERRED={'CH':'aldi-suisse.ch','MD':'winetime.md','NP':'cheers.com.np','UG':'legourmetkampala.com','TH':'wishbeer.com'}
 
 def num(s):
     if s is None:return None
@@ -53,6 +53,9 @@ def price(r):
     if c=='BR' and 'carrefour' in url:
         m=re.search(r'Corona Extra.{0,300}?R\$\s*([0-9.,]+).{0,60}?R\$\s*([0-9.,]+)',s,re.I)
         if m:return num(m.group(2))
+    if c=='CH' and 'aldi-suisse.ch' in url:
+        m=re.search(r'CORONA\s+Extra\s+0\.33\s*l\s*\(CHF\s*[0-9.,]+/1\s*l\)\s*CHF\s*([0-9.,]+)',s,re.I)
+        if m:return num(m.group(1))
     if c=='CZ' and 'rohlik' in url:
         m=re.search(r'/l\s+(\d{1,4})\s+(\d{2})\s*CZK\b',s,re.I)
         if m:return float(m.group(1)+'.'+m.group(2))
