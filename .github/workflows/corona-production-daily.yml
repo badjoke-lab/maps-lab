@@ -1,0 +1,122 @@
+name: Corona production daily
+
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+  push:
+    branches:
+      - build/corona-production
+    paths:
+      - '.github/workflows/corona-production-daily.yml'
+      - 'scripts/probe-corona-strict.mjs'
+      - 'scripts/merge-corona-strict.py'
+      - 'scripts/audit-corona-strict.py'
+      - 'scripts/publish-corona-production.py'
+      - 'data/probes/**'
+      - 'data/corona-production-countries.json'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: corona-production-daily
+  cancel-in-progress: false
+
+jobs:
+  collect-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Syntax check
+        run: |
+          node --check scripts/probe-corona-strict.mjs
+          python -m py_compile scripts/audit-corona-strict.py scripts/merge-corona-strict.py scripts/publish-corona-production.py
+
+      - name: Probe attempt 1
+        continue-on-error: true
+        env:
+          PROBE_TIMEOUT_MS: '20000'
+          PROBE_CONCURRENCY: '8'
+          PROBE_MAX_DISTANCE: '2200'
+        run: |
+          node scripts/probe-corona-strict.mjs
+          mv corona-strict-probe-results.json corona-strict-probe-results-1.json
+
+      - name: Preserve attempt 1
+        if: always()
+        run: |
+          if [ -f corona-strict-probe-results.json ]; then mv corona-strict-probe-results.json corona-strict-probe-results-1.json; fi
+          test -f corona-strict-probe-results-1.json
+
+      - name: Probe attempt 2
+        continue-on-error: true
+        env:
+          PROBE_TIMEOUT_MS: '20000'
+          PROBE_CONCURRENCY: '6'
+          PROBE_MAX_DISTANCE: '2200'
+        run: |
+          node scripts/probe-corona-strict.mjs
+          mv corona-strict-probe-results.json corona-strict-probe-results-2.json
+
+      - name: Preserve attempt 2
+        if: always()
+        run: |
+          if [ -f corona-strict-probe-results.json ]; then mv corona-strict-probe-results.json corona-strict-probe-results-2.json; fi
+          test -f corona-strict-probe-results-2.json
+
+      - name: Merge attempts
+        run: python scripts/merge-corona-strict.py corona-strict-probe-results-1.json corona-strict-probe-results-2.json
+
+      - name: Canonicalize price tuples
+        run: python scripts/audit-corona-strict.py
+
+      - name: Build production snapshot
+        run: python scripts/publish-corona-production.py
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: corona-production-evidence
+          path: |
+            corona-strict-probe-results-1.json
+            corona-strict-probe-results-2.json
+            corona-strict-probe-results.json
+            corona-canonical-audit.json
+            data/corona/current.json
+            data/corona/source-health.json
+            data/corona/history/*.json
+          if-no-files-found: warn
+
+      - name: Persist production data
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch origin build/corona-production
+          if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/build/corona-production)" ]; then
+            echo 'branch advanced during collection; refusing to overwrite newer state'
+            exit 3
+          fi
+          git add data/corona
+          if git diff --cached --quiet; then
+            echo 'no production data changes'
+            exit 0
+          fi
+          git commit -m "data: refresh Corona production prices"
+          git push origin HEAD:build/corona-production
