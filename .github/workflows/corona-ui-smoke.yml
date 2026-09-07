@@ -1,0 +1,46 @@
+name: Corona UI smoke
+
+on:
+  push:
+    branches:
+      - build/corona-production
+      - main
+    paths:
+      - 'apps/corona-price-map/**'
+      - 'scripts/build-corona-site.mjs'
+      - 'scripts/build-corona-history-summary.py'
+      - 'scripts/fetch-corona-fx.mjs'
+      - 'scripts/smoke-corona-site.mjs'
+      - '.github/workflows/corona-ui-smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Refresh derived UI data
+        run: |
+          node scripts/fetch-corona-fx.mjs
+          python scripts/build-corona-history-summary.py
+          node scripts/build-corona-site.mjs
+      - name: Browser smoke
+        run: node scripts/smoke-corona-site.mjs
+      - name: Upload accepted screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: corona-ui-smoke
+          path: smoke-artifacts/*.png
+          if-no-files-found: error
